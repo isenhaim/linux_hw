@@ -1,0 +1,193 @@
+№3 ____________________________________________________________________________________________
+# Обновляем репозитории
+sudo apt-get update
+
+# Ставим последние обновления
+sudo apt-get upgrade -y
+
+# Перезагружаем ОС
+reboot
+
+# Создаем директорию для монтирования образа Guest Additions
+mkdir /home/isenhaim/additions
+
+# Монтируем образ в созданную директорию
+sudo mount /dev/sr0 /home/isenhaim/additions
+
+# Ставим зависимости для запуска ./autorun.sh
+sudo apt-get install gcc make perl
+
+# Перезагружаем
+reboot
+
+# Устанавливаем необходимые компоненты
+cd /home/isenhaim/additions/
+sudo ./autorun.sh
+
+# И еще разок
+reboot
+
+# Демонтируем диск
+sudo umount /dev/sr0
+
+# Удаляем директорию
+rm -rf
+
+
+№5 ____________________________________________________________________________________________
+# Устанавливаем SSH сервер
+sudo apt install openssh-server -y
+
+# Для настройки сети в режиме моста выключаем ОС
+poweroff
+
+# Для настройки сети выбрал не мост, а виртуальный адаптер хоста получаем ip адрес для подключения
+ip addr 
+
+# Справка по команде ufw 
+man ufw
+ufw -h
+
+# Запускаем SSH сервер
+sudo systemctl start ssh
+
+# Проверяем все ли в порядке
+systemctl | grep ssh
+
+# Фаервол активация шаг не потребовался, но на всякий случай добавил
+sudo ufw enable
+
+# Открытие порта 22 
+sudo ufw allow 22
+
+# Закрытие порта 22 
+sudo ufw deny 22
+
+# Генерация пары ключей на Linux, в моем случае использовался puttygen
+ssh-keygen
+
+# Записываем публичный ключ в файл authorized_keys 
+cat id_rsa.pub > authorized_keys
+
+# На приватный ключ выставляем права только на чтение
+chmod -c 0400 id_rsa
+
+# Далее копируем приватный ключ на основную ОС без расширения, после чего загружаю в generator putty и сохраняю его.
+nano id_rsa
+
+# Закидываю public-key на гостевую ОС делал через WSL было интересно попробовать
+ssh-copy-id isenhaim@192.168.56.101
+
+
+№6.1 ____________________________________________________________________________________________
+
+# Отправляемся в конфигурационный файл ssh - сервера
+
+nano / vim /etc/ssh/sshd_config
+
+# За возможность подключения от root пользователя отвечает пункт PermitRootLogin проверяем что стоит yes для разрешения логина под root
+PermitRootLogin yes
+
+# но я так делать не буду и переведу этот параметр в no, 
+PermitRootLogin yes
+
+# также закрою возможность авторизации по ssh с помощью пароля, авторизация с помощью ключа уже настроена
+PasswordAuthentication no
+
+# Перезапускаем службу 
+systemctl restart ssh
+
+
+№6.2 ____________________________________________________________________________________________
+# Добавляем файл баннера
+sudo nano /etc/ssh/ssh_banner
+
+# В файле sshd_config указываем баннер
+Banner /etc/ssh/ssh_banner
+
+# Перезапускаем ssh сервер
+systemctl restart ssh
+
+
+Для того чтобы при входе под root банер не отображался в конец файла sshd_config требуется добавить
+Match User root
+        Banner none
+
+
+№6.3 ____________________________________________________________________________________________
+# Для поиска где храниться этот вывод использовал 
+grep -r "* Documentation:  https://help.ubuntu.com" /etc/
+
+# Находим 
+/etc/update-motd.d/10-help-text:printf " * Documentation:  https://help.ubuntu.com\n"
+
+# заходим в это файл и закоментируем лишнюю информацию
+# просматриваем что есть еще находим остатки, пришлось просматривать вручную, почему то grep внутрь файла 50-landscape-sysinfo не заходил
+# так же выяснил что отображение этих скриптов при входе регулируется правами на них.
+sudo nano 50-landscape-sysinfo
+
+```
+Welcome to Ubuntu 18.04.4 LTS (GNU/Linux 4.15.0-88-generic x86_64)
+
+
+0 packages can be updated.
+0 updates are security updates.
+
+
+Last login: Tue Feb 18 11:20:39 2020 from 192.168.75.1
+```
+
+# Скрыть для root
+sudo touch /root/.hushlogin
+
+№6.4 ____________________________________________________________________________________________
+# Устанавливаем apt-file
+sudo apt install apt-file
+
+# Обновляем кэш, после этого сможем пользоваться даже в оффлайне
+sudo apt update
+
+# Ищем имя пакета
+apt-file -l search landscape-sysinfo
+apt-file -l search ansiweather
+
+# Читаем man
+man landscape-sysinfo 
+man ansiweather
+
+# Просмотр файлов пакета
+apt-file show ansiweather
+
+
+# Для получения информации о пакете использовал
+apt-cache search ansiweather
+apt-cache search landscape-sysinfo
+
+
+
+# 6.5 ____________________________________________________________________________________________
+
+# В связи с тем, что отображаются только те сообщения что в /etc/update-motd.d/ с правами X выполняю
+sudo chmod -x /etc/update-motd.d/*
+
+# Создаю свой файл 
+touch 01-custom 
+
+# Содержание 
+
+    #!/bin/sh
+    [ -r /etc/lsb-release ] && . /etc/lsb-release
+    if [ -z "$DISTRIB_DESCRIPTION" ] && [ -x /usr/bin/lsb_release ]; then
+            # Fall back to using the very slow lsb_release utility
+            DISTRIB_DESCRIPTION=$(lsb_release -s -d)
+    fi
+    printf "Welcome to %s (%s %s %s)\n" "$DISTRIB_DESCRIPTION" "$(uname -o)" "$(uname -r)" "$(uname -m)"
+    echo
+    /usr/bin/landscape-sysinfo
+    echo
+    /usr/bin/ansiweather -l Moscow,RU
+    stamp="/var/lib/update-notifier/updates-available"
+    [ ! -r "$stamp" ] || cat "$stamp"
+
+
+# После выполненых действий так же отображается при входе в терминал локально, но если потребуется можно скопировать скрипт в ~/.bashrc
