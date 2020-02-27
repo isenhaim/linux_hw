@@ -1,0 +1,87 @@
+# 1. Создать файл file1 и наполнить его произвольным содержимым.
+isenhaim@ubuntu:~$ touch file1 & dd if=/dev/zero of=~/file1 bs=100M count=4
+
+# Скопировать его в file2. 
+isenhaim@ubuntu:~$ cat file1 > file2
+
+# Создать символическую ссылку file3 на file1. Создать жесткую ссылку file4 на file1. 
+isenhaim@ubuntu:~$ ln -s file1 file3
+isenhaim@ubuntu:~$ ln -P file1 file4
+
+# Посмотреть, какие айноды у файлов. Удалить file1. 
+isenhaim@ubuntu:~$ ls -li
+262921 -rw-rw-r-- 2 isenhaim isenhaim 419430400 Feb 26 12:52 file1
+276784 -rw-rw-r-- 1 isenhaim isenhaim 419430400 Feb 26 12:53 file2
+276785 lrwxrwxrwx 1 isenhaim isenhaim         5 Feb 26 12:54 file3 -> file1
+262921 -rw-rw-r-- 2 isenhaim isenhaim 419430400 Feb 26 12:52 file4
+isenhaim@ubuntu:~$ rm file1
+
+# Что стало с остальными созданными файлами? Попробовать вывести их на экран.
+isenhaim@ubuntu:~$ cat file3
+cat: file3: No such file or directory
+
+
+# 2. Дать созданным файлам другие, произвольные имена. Создать новую символическую ссылку. Переместить ссылки в другую директорию.
+isenhaim@ubuntu:~$ mv file2 file_2
+isenhaim@ubuntu:~$ mv file3 file_3
+isenhaim@ubuntu:~$ mv file4 file_4
+isenhaim@ubuntu:~$ ln -s file2 symbolic_link & mkdir symbolic & mv symbolic_link symbolic & mv file_3 symbolic
+
+# 3. Создать два произвольных файла. 
+isenhaim@ubuntu:~$ touch doc_{1..2}
+
+# Первому присвоить права на чтение, запись для владельца и группы, только на чтение для всех. 
+isenhaim@ubuntu:~$ chmod 664 doc_1
+
+-rw-rw-r-- 1 isenhaim isenhaim         0 Feb 26 13:38 doc_1
+
+# Второму присвоить права на чтение, запись только для владельца. Сделать это в численном и символьном виде.
+isenhaim@ubuntu:~$ chmod 600 doc_2
+
+-rw------- 1 isenhaim isenhaim         0 Feb 26 13:38 doc_2
+
+# Добавил что бы повторить в символьном виде
+isenhaim@ubuntu:~$ chmod 777 doc_2
+
+-rwxrwxrwx 1 isenhaim isenhaim         0 Feb 26 13:38 doc_2
+
+isenhaim@ubuntu:~$ chmod ugo-r-w-x doc_2
+isenhaim@ubuntu:~$ chmod u+rw doc_2
+-rw------- 1 isenhaim isenhaim         0 Feb 26 13:38 doc_2
+
+
+# 4. Создать пользователя, обладающего возможностью выполнять действия от имени суперпользователя.
+isenhaim@ubuntu:~$ sudo useradd -m -G sudo -s /bin/bash minix
+isenhaim@ubuntu:~$ sudo passwd minix
+
+isenhaim@ubuntu:~$ sudo su minix
+
+# 5. * Создать группу developer, несколько пользователей, входящих в эту группу. Создать директорию для совместной работы. 
+# Сделать так, чтобы созданные одними пользователями файлы могли изменять другие пользователи этой группы.
+isenhaim@ubuntu:~$ sudo groupadd developer
+
+isenhaim@ubuntu:~$ sudo useradd -m -G developer -s /bin/bash dev_1
+isenhaim@ubuntu:~$ sudo useradd -m -G developer -s /bin/bash dev_2
+isenhaim@ubuntu:~$ sudo passwd dev_1
+isenhaim@ubuntu:~$ sudo passwd dev_2
+
+
+isenhaim@ubuntu:~$ mkdir dev_dir
+isenhaim@ubuntu:~$ sudo chgrp developer ~/dev_dir
+
+isenhaim@ubuntu:~$ sudo chmod g+s dev_dir
+
+
+# 6. * Создать в директории для совместной работы поддиректорию для обмена файлами, но чтобы удалять файлы могли только их создатели.
+isenhaim@ubuntu:~/dev_dir$ mkdir share
+isenhaim@ubuntu:sudo chmod +t share
+
+
+
+# 7. * Создать директорию, в которой есть несколько файлов. Сделать так, чтобы открыть файлы можно только, зная имя файла, а через ls список файлов посмотреть нельзя.
+isenhaim@ubuntu:~$ mkdir dir
+isenhaim@ubuntu:~$ touch ./dir/file{1..2}
+
+isenhaim@ubuntu:~$ chmod -r dir
+isenhaim@ubuntu:~$ ls dir
+ls: cannot open directory 'dir': Permission denied
