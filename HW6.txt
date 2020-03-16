@@ -1,0 +1,87 @@
+# Задание 1
+# найдите информацию о том, как в Ubuntu открыть порт 80,443. Укажите как.
+sudo iptables -A INPUT -p tcp --dport 80 -j ACCEPT
+sudo iptables -A INPUT -p tcp --dport 443 -j ACCEPT
+
+# Установить nginx, сконфигурировать свой виртуальный хост, используя порт 80, так, чтобы:
+# на запрос клиента с указанным и непустым хидером 'User'. отправлять код 200 с текстом "Hi $user!", где $user - это значение хидера 'User'.
+# иначе отправлять код 404 с текстом "Page not found".
+# Мне прислать конфиг nginx и команду curl, которую выполняете.
+
+# Конфиг файла в /etc/nginx/conf.d/mnt.ru
+server {
+        listen 80;
+        listen [::]:80;
+
+        server_name mnt.ru;
+
+        location / {
+          if ($http_user){
+             return 200 "Hi $http_user\n";
+          }
+          return 404 "Not found\n";
+        }
+}
+
+# Было добавленно в файле /etc/hosts
+127.0.0.1       mnt.ru
+
+# Далее 
+sudo nginx -s reload
+
+# Команды curl для проверки 
+isenhaim@isenhaim:/etc/nginx/conf.d$ curl -H "user: Иван" mnt.ru
+Hi Иван
+
+isenhaim@isenhaim:/etc/nginx/conf.d$ curl mnt.ru
+Not found
+
+
+# Задание 2
+# найти информацию о том, что такое самоподписанные сертификаты и сгенерировать такой для своего вэб сервера. 
+sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout
+/etc/ssl/private/nginx-selfsigned.key -out /etc/ssl/certs/nginx-selfsigned.crt
+
+# Написать своими словами, что это такое и как сгенерить.
+Самоподписанный сертефикат позволяет шифровать данные передаваемые между клиент-сервером но не гарантирует подлинность сервера
+
+
+# добавить SSL соединение для дифолтного виртуального хоста nginx, используя порт 443. Прикрепить конфиги nginx.
+
+# Default server configuration
+#
+server {
+        listen 80 default_server;
+        listen [::]:80 default_server;
+        return 301 https://$server_name$request_uri;
+        root /var/www/html;
+        index index.html index.htm index.nginx-debian.html;
+        server_name _;
+        location / {
+
+                try_files $uri $uri/ =404;
+        }
+        index index.html index.htm index.nginx-debian.html;
+        server_name _;
+        location / {
+                try_files $uri $uri/ =404;
+        }
+}
+
+server {
+        listen 443 ssl http2 default_server;
+        listen [::]:443 ssl http2 default_server;
+        include snippets/self-signed.conf;
+        include snippets/ssl-params.conf;
+}
+
+# откройте в браузере страницу хоста и посмотрите, как браузер реагирует на самоподписанные сертификаты. Напишите, что видите.
+Появляется предупреждение, что нет доверия центру сертификации выпустившему данный сертификат
+NET::ERR_CERT_AUTHORITY_INVALID
+
+# мы говорили о необходимости шифровать симметрично. При этом проблем с получением ассиметричных сертификатов нет. Зачем такая сложная схема для установления SSL соединения? 
+# Почему бы не шифровать ассиметрично? Своими словами.
+Ключи передаются асиметричным шифрованием. 
+Обмен ключами асиметричным шифрованием требуется для повышения защиты и нераскрытия публичного ключа для третьих лиц.
+
+Все остальное передается симетричным шифрованием для повышения скорости.
