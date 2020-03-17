@@ -7,7 +7,7 @@ isenhaim@ubuntu:~$ sed -En '/(\b(([0-9]|[1-9][0-9]|1[0-9]{2}|2[0-4][0-9]|25[0-5]
 # Написать регулярное выражение для проверки, ведет ли ссылка URL на некоторый файл, и это действительно ссылка на картинку 
 # (например, http://site.com/folder/1.png), а не на любой файл.
 
-isenhaim@ubuntu:~$ sed -En '/^.*\/(.*.gif|.*\.jpg|.*\.png)$/p' link.txt
+isenhaim@ubuntu:~$ sed -En '/^htt(p|ps):.*\/(.*\.gif|.*\.jpg|.*\.png)$/p' link.txt
 
 
 # 4. *Написать регулярное выражение, которое проверяет, что файл в URL (например, https://site.ru/folder/download/test.docx) 
@@ -15,4 +15,4 @@ isenhaim@ubuntu:~$ sed -En '/^.*\/(.*.gif|.*\.jpg|.*\.png)$/p' link.txt
 # Примечание. Задания с 3 по 4 даны для тех, кому двух упражнений показалось недостаточно.
 # Для проверки использовал ------files with extensions---------
 
-isenhaim@ubuntu:~$ sed -En '/.*\.[^(php|exe|cpp)$]/p' files.txt
+isenhaim@ubuntu:~$ sed -En '/^htt(p|ps):\/\/.*\.[^(php|exe|cpp)$]/p' files files.txt
