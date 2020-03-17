@@ -1,0 +1,40 @@
+# Dockerfile
+________________________________________________________________________________________________
+FROM python:alpine
+
+MAINTAINER Evgeniy Simonov <simonov.ev.al@gmail.com>
+
+RUN apk update && apk upgrade && apk add bash && apk add git
+RUN mkdir -p project && cd project && git clone https://github.com/mtuktarov/linux_stuff.git ./
+
+WORKDIR /project/django-test-app
+
+RUN pip install -r /project/django-test-app/requirements.txt
+RUN rm -rf /project/django-test-app/requirements.txt
+RUN python manage.py migrate
+
+CMD python manage.py runserver 0.0.0.0:8000
+________________________________________________________________________________________________
+
+# Собираем образ
+docker build -t isenhaim/django-test-app:v1 .
+
+# Запускаем образ с пробросом портов в контейнер
+docker run -it -p 80:8000 isenhaim/django-test-app:v1
+
+# Проверяем работу 
+curl http://localhost
+
+
+# Загружаем в DockerHUB
+
+docker login
+
+docker push isenhaim/django-test-app
+
+
+# Доступен по адресу 
+https://hub.docker.com/repository/registry-1.docker.io/isenhaim/django-test-app/tags?page=1
+
+# Или pull
+docker pull isenhaim/django-test-app:v1
