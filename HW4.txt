@@ -15,4 +15,4 @@ isenhaim@ubuntu:~$ sed -En '/^htt(p|ps):.*\/(.*\.gif|.*\.jpg|.*\.png)$/p' link.t
 # Примечание. Задания с 3 по 4 даны для тех, кому двух упражнений показалось недостаточно.
 # Для проверки использовал ------files with extensions---------
 
-isenhaim@ubuntu:~$ sed -En '/^htt(p|ps):\/\/.*\.[^(php|exe|cpp)$]/p' files files.txt
+isenhaim@ubuntu:~$ sed -En '/^htt(p|ps):\/\/.*\.[^(php|exe|cpp)$]/p' files.txt
