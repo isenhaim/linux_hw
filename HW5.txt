@@ -1,0 +1,141 @@
+# 1. Написать скрипт, который удаляет из текстового файла пустые 
+строки и заменяет маленькие символы на большие (воспользуйтесь tr или sed). 
+Скрипт должен выводить информацию о том, как его использовать.
+
+isenhaim@DESKTOP-D4MCMTQ:~$ ./script.sh test.txt
+Example: ./script.sh [file]
+
+Скрипт заменяет строчные символы на прописные
+и удаляет пустые строки в переданном файле
+
+#!/bin/bash
+usage(){
+cat <<EOF
+Example: $0 [file]
+
+Скрипт заменяет строчные символы на прописные 
+и удаляет пустые строки в переданном файле
+
+EOF
+}
+usage
+cat ${1} | tr [:lower:] [:upper:] | cat | tr -s '\n' '\n' | cat > ${1}
+
+
+
+# Пример текста
+
+Colours do not exist. When your eye receives light, it sends messages to your mind. And your mind translates these messages into colours which vary according to the wavelengths of the light.
+
+You are all aware of the strange tricks your mind can play on you. 
+
+It’s not surprising that when it translates your eyes’ messages into colours, it adds other messages. 
+
+Colours become linked with memories, associations, emotions and natural body reactions. 
+
+Green begins to mean trees and leaves; red subconsciously reminds you of fire.
+
+__________________________________________
+isenhaim@DESKTOP-D4MCMTQ:~$ cat test.txt
+COLOURS DO NOT EXIST. WHEN YOUR EYE RECEIVES LIGHT, IT SENDS MESSAGES TO YOUR MIND. AND YOUR MIND TRANSLATES THESE MESSAGES INTO COLOURS WHICH VARY ACCORDING TO THE WAVELENGTHS OF THE LIGHT.
+YOU ARE ALL AWARE OF THE STRANGE TRICKS YOUR MIND CAN PLAY ON YOU.
+IT’S NOT SURPRISING THAT WHEN IT TRANSLATES YOUR EYES’ MESSAGES INTO COLOURS, IT ADDS OTHER MESSAGES.
+COLOURS BECOME LINKED WITH MEMORIES, ASSOCIATIONS, EMOTIONS AND NATURAL BODY REACTIONS.
+GREEN BEGINS TO MEAN TREES AND LEAVES; RED SUBCONSCIOUSLY REMINDS YOU OF FIRE.
+
+
+# 2. Определеить, какие ошибки записывается в /var/log/auth.log при попытке неудачной аутентификации пользователя для ssh подключения, 
+# для подключения через терминал - ctrl+alt+f3 и для подключения с помощью виртуального терминала (gui приложения). 
+sshd[1891]: Failed password for isenhaim from 192.168.75.1 port 56395 ssh2
+login[1010]: pam_unix(login:auth): check pass; user unknown
+login[2048]: FAILED LOGIN 
+
+# Сделать скрипт мониторинга лога /var/log/auth.log на наличие этих событий, который выводит сообщения о попытке неудачной аутентификации на экран. 
+
+#!/bin/bash
+info(){
+echo "Скрипт для мониторинга неудачных авторизаций в real-time"
+echo "Рекомендуется использовать с параметром & для мониторинга лога авторизаций в фоне"
+
+}
+
+
+info
+tail -f /var/log/auth.log | grep  -E '(Failed password|FAILED LOGIN)'
+
+# Проверить скрипт, выполнив ошибочную регистрацию с терминала, с помощью виртуального терминала и через ssh. 
+# Скрипт должен выводить информацию о том, как его использовать.
+
+┌ isenhaim [~]
+└─ $ Скрипт для мониторинга неудачных авторизаций в real-time
+Рекомендуется использовать с параметром & для мониторинга лога авторизаций в фоне
+Mar  4 11:19:11 ubuntu sshd[2125]: Failed password for isenhaim from 192.168.75.1 port 54793 ssh2
+Mar  4 11:27:29 ubuntu login[2123]: FAILED LOGIN (1) on '/dev/tty2' FOR 'UNKNOWN', Authentication failure
+
+
+
+# 3. ^ Написать скрипт, который в указанной с помощью параметра -d директории создает указанные файлы. 
+# Если файлы уже существуют, то выводится предупреждения на экран.
+# Если указано несколько директорий, то выводится ошибка с соответствующей информацией. 
+
+# ^ Созданным файлам, которые имеют разрешения '.sh' нужно дать права на выполнения. 
+# Скрипт должен выводить информацию о том, как его использовать и понятные сообщения об ошибках. Примеры запуска:
+
+# ./script.sh -d /tmp/task_3
+# ./script.sh -d file1 file2 file3
+# ./script.sh -d /tmp/task_3 file1 file2.sh file3
+# ./script.sh -d /tmp/task_3 -d /tmp/task_3_2 file1 file2.sh file3
+
+#!/bin/bash
+
+info(){
+echo "Укажие директорию после ключа -d"
+}
+
+echo "./scr.sh -d [directory] [file(s)]
+Скрипт создает файлы в директории, Файлам с расширением .sh
+присваиваются права на выполнение"
+
+if [ $# -gt 2 ]
+then
+    if [ $1 = '-d' ]
+    then
+        if [ -d $2 ]
+        then
+            for param in ${@:3}
+                do
+                    if [ $param = '-d' ]
+                    then
+                        echo "Создание файлов доступно для одной директории"
+                    fi
+
+                    if [ -f $param ]
+                    then
+                        echo "Файл $param уже существует обновить дату последнего изменения? (y/n)"
+                        echo -n
+                        read answer
+
+                        if [ $answer = 'n' ]
+                        then
+                            continue
+                        fi
+                    fi
+
+                    #echo $2$param
+                    touch $2$param
+
+                    if [ ${param##*.} = "sh" ]
+                    then
+                        chmod +x $param
+                    fi
+
+                done
+        else
+            echo "Такой директории нет"
+        fi
+    else
+        info
+    fi
+else
+    echo "Укажите файлы"
+fi 
